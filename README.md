@@ -1,2 +1,2 @@
-# Quantum Information Propogation and Scrambling
+# Quantum Information Propagation and Scrambling
 See `Paper.pdf` for details.
