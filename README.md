@@ -1,2 +1,2 @@
-# OTOC Sanity Checks
- Some calculations for simple OTOC systems.
+# Quantum Information Propogation and Scrambling
+See `Paper.pdf` for details.
