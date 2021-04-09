@@ -2,6 +2,7 @@ import numpy as np
 from scipy import linalg as la
 from multiprocessing import Pool
 
+
 def box_hamiltonian(highest_level, hbar=1, mass=1, length=1):
     """
     Hamiltonian for particle in a box.
@@ -28,6 +29,7 @@ def box_hamiltonian(highest_level, hbar=1, mass=1, length=1):
         matrix[n - 1, n - 1] = n ** 2
     return np.matrix(constant_factor * matrix)
 
+
 def partition_function(beta, hamiltonian):
     """
     Partition function for given hamiltonian under density operator
@@ -49,6 +51,7 @@ def partition_function(beta, hamiltonian):
         Partition function at specified beta (temperature).
     """
     return np.trace(la.expm(-beta * hamiltonian))
+
 
 def box_thermal_state(highest_level, beta, hbar=1, mass=1, length=1):
     """
@@ -79,12 +82,13 @@ def box_thermal_state(highest_level, beta, hbar=1, mass=1, length=1):
     H = box_hamiltonian(highest_level, hbar, mass, length)
     return np.matrix(la.expm(- beta * H) / partition_function(beta, H))
 
+
 def time_evolution(hamiltonian, time, hbar=1):
     """
     Generate the time evolution operator given the hamiltonian H.
-    
+
     U = e^(-iHt/ħ)
-    
+
     Parameters
     ----------
     hamiltonian : 2D array
@@ -101,10 +105,11 @@ def time_evolution(hamiltonian, time, hbar=1):
     """
     return np.matrix(la.expm(-1j * hamiltonian * time / hbar))
 
-def box_position_operator(highest_level, hbar, mass, length, time, 
+
+def box_position_operator(highest_level, hbar, mass, length, time,
                           explicit=False):
     """
-    Calculation of matrix representation of position operator for a 
+    Calculation of matrix representation of position operator for a
     particle in a box in the energy basis.
 
     Parameters
@@ -130,23 +135,25 @@ def box_position_operator(highest_level, hbar, mass, length, time,
     """
     matrix = np.zeros((highest_level, highest_level), dtype=np.complex128)
     for n in range(1, highest_level + 1):
-        En = n ** 2 * hbar ** 2 * n ** 2/ (2 * mass * length ** 2)
+        En = n ** 2 * hbar ** 2 * n ** 2 / (2 * mass * length ** 2)
         for m in range(1, highest_level + 1):
-            Em = m ** 2 * hbar ** 2 * m ** 2/ (2 * mass * length ** 2)
+            Em = m ** 2 * hbar ** 2 * m ** 2 / (2 * mass * length ** 2)
             phase = np.e ** (-1j * (Em - En) * time / hbar)
             if m == n:
                 amplitude = length / 2
             else:
                 if explicit:
                     # Explicit amplitude calculation.
-                    amplitude = 2 * length * (-2 * m * n + 2 * (-1) ** (m + 
-                        n) * m * n) / ((m ** 2 - n **2) ** 2 * np.pi ** 2)
+                    amplitude = 2 * length * \
+                        (-2 * m * n + 2 * (-1) ** (m + n) * m * n) / (
+                            (m ** 2 - n ** 2) ** 2 * np.pi ** 2)
                 else:
                     # Amplitude calculation from appendix.
-                    amplitude = (length / np.pi ** 2) * (1 - (-1) ** (n + 
-                        m)) * (1 / ((n + m) ** 2) - 1 / ((n - m) ** 2))
+                    amplitude = (length / np.pi ** 2) * (1 - (-1) ** (n + m)
+                                                         ) * (1 / ((n + m) ** 2) - 1 / ((n - m) ** 2))
             matrix[n - 1, m - 1] = phase * amplitude
     return np.matrix(matrix)
+
 
 def box_momentum_operator(highest_level, hbar, length):
     """
@@ -179,6 +186,7 @@ def box_momentum_operator(highest_level, hbar, length):
         matrix[n - 1, n - 1] = hbar * kn
     return np.matrix(matrix)
 
+
 def momentum_operator(position_operator, hamiltonian):
     """
     Calculation of the matrix representation of the momentum operator for
@@ -206,6 +214,7 @@ def momentum_operator(position_operator, hamiltonian):
             elmnt = (1j / 2) * (En - Em) * position_operator[n - 1, m - 1]
             matrix[n - 1, m - 1] = elmnt
     return np.matrix(matrix)
+
 
 def energy_expectation(highest_level, hbar, mass, length, beta):
     """
@@ -235,6 +244,7 @@ def energy_expectation(highest_level, hbar, mass, length, beta):
     rho = box_thermal_state(highest_level, beta, hbar, mass, length)
     return np.trace(H * rho)
 
+
 def energy_component(index_1, index_2):
     """
     Energy difference δE_nm as defined in paper.
@@ -252,6 +262,7 @@ def energy_component(index_1, index_2):
         Energy difference.
     """
     return np.pi ** 2 * (index_1 ** 2 - index_2 ** 2)
+
 
 def position_component(index_1, index_2):
     """
@@ -273,8 +284,9 @@ def position_component(index_1, index_2):
     if index_1 == index_2:
         return 1 / 2
     else:
-        return (((1 - (-1) ** (index_1 + index_2)) / np.pi ** 2) * 
-            (1 / (index_1 + index_2) ** 2 - 1 / (index_1 - index_2) ** 2))
+        return (((1 - (-1) ** (index_1 + index_2)) / np.pi ** 2) *
+                (1 / (index_1 + index_2) ** 2 - 1 / (index_1 - index_2) ** 2))
+
 
 def momentum_component(index_1, index_2):
     """
@@ -294,9 +306,10 @@ def momentum_component(index_1, index_2):
     p_nm : momentum
         Momentum element.
     """
-    return (1j / 2) * (energy_component(index_1, index_2) * 
-        position_component(index_1, index_2))
-    
+    return (1j / 2) * (energy_component(index_1, index_2) *
+                       position_component(index_1, index_2))
+
+
 def paper_partition_function(highest_level, temperature):
     """
     Partition function for given particle in a box under density operator
@@ -322,6 +335,7 @@ def paper_partition_function(highest_level, temperature):
         E = np.pi ** 2 * i ** 2
         z_partial.append(np.e ** (-E / temperature))
     return np.sum(z_partial)
+
 
 def paper_box_OTOC(inputs):
     """
@@ -357,8 +371,8 @@ def paper_box_OTOC(inputs):
                 p_km = momentum_component(k + 1, m + 1)
                 p_nk = momentum_component(n + 1, k + 1)
                 x_km = position_component(k + 1, m + 1)
-                b_nmk = -1j * (phase_left * x_nk * p_km - phase_right * 
-                    p_nk * x_km)
+                b_nmk = -1j * (phase_left * x_nk * p_km - phase_right *
+                               p_nk * x_km)
                 b_nmk_list.append(b_nmk)
             b_nmk_array = np.array(b_nmk_list)
             b_nm = np.sum(b_nmk_array)
@@ -369,9 +383,10 @@ def paper_box_OTOC(inputs):
         energy_OTOC_n = np.e ** (- np.pi ** 2 * n ** 2 / temperature) * c_n
         energy_OTOC_n_list.append(energy_OTOC_n)
     energy_OTOC_n_array = np.array(energy_OTOC_n_list)
-    OTOC = (np.sum(energy_OTOC_n_array) / 
-        paper_partition_function(highest_level, temperature))
+    OTOC = (np.sum(energy_OTOC_n_array) /
+            paper_partition_function(highest_level, temperature))
     return OTOC
+
 
 def postition_position_OTOC(inputs):
     """
@@ -409,8 +424,8 @@ def postition_position_OTOC(inputs):
                 p_km = position_component(k + 1, m + 1)
                 p_nk = position_component(n + 1, k + 1)
                 x_km = position_component(k + 1, m + 1)
-                b_nmk = -1j * (phase_left * x_nk * p_km - phase_right * 
-                    p_nk * x_km)
+                b_nmk = -1j * (phase_left * x_nk * p_km - phase_right *
+                               p_nk * x_km)
                 b_nmk_list.append(b_nmk)
             b_nmk_array = np.array(b_nmk_list)
             b_nm = np.sum(b_nmk_array)
@@ -421,14 +436,15 @@ def postition_position_OTOC(inputs):
         energy_OTOC_n = np.e ** (- np.pi ** 2 * n ** 2 / temperature) * c_n
         energy_OTOC_n_list.append(energy_OTOC_n)
     energy_OTOC_n_array = np.array(energy_OTOC_n_list)
-    OTOC = (np.sum(energy_OTOC_n_array) / 
-        paper_partition_function(highest_level, temperature))
+    OTOC = (np.sum(energy_OTOC_n_array) /
+            paper_partition_function(highest_level, temperature))
     return OTOC
+
 
 def paper_box_OTOC_over_time(highest_level, temperature_array, time_array,
                              number_cores=5):
     """
-    Compute out-of-time-ordered-correlator for particle in a box using the 
+    Compute out-of-time-ordered-correlator for particle in a box using the
     method I specified in the paper with multiprocessing support over time.
 
     Parameters
@@ -455,10 +471,11 @@ def paper_box_OTOC_over_time(highest_level, temperature_array, time_array,
     OTOC_array = np.array(OTOC_list)
     return OTOC_array
 
-def position_position_OTOC_over_time(highest_level, temperature_array, 
+
+def position_position_OTOC_over_time(highest_level, temperature_array,
                                      time_array, number_cores=5):
     """
-    Compute out-of-time-ordered-correlator for particle in a box using the 
+    Compute out-of-time-ordered-correlator for particle in a box using the
     method I specified in the paper with multiprocessing support over time.
     This is the OTOC for the position with itself evolved in time. It's not
     used in the paper but is proportional to the momentum result used.
@@ -486,6 +503,7 @@ def position_position_OTOC_over_time(highest_level, temperature_array,
         OTOC_list = p.map(paper_box_OTOC, inputs)
     OTOC_array = np.array(OTOC_list)
     return OTOC_array
+
 
 def box_OTOC_beta(highest_level, hbar, mass, length, beta, time):
     """
@@ -520,7 +538,8 @@ def box_OTOC_beta(highest_level, hbar, mass, length, beta, time):
     expectation = np.trace(rho * otoc_operator)
     return - expectation
 
-def box_OTOC_temp(highest_level, hbar, mass, length, boltzmann, temp, time, 
+
+def box_OTOC_temp(highest_level, hbar, mass, length, boltzmann, temp, time,
                   explicit=False):
     """
     OTOC for particle in a box using temperature.
@@ -552,10 +571,10 @@ def box_OTOC_temp(highest_level, hbar, mass, length, boltzmann, temp, time,
     beta = 1 / (boltzmann * temp)
     H = box_hamiltonian(highest_level, hbar, mass, length)
     rho = box_thermal_state(highest_level, beta, hbar, mass, length)
-    x = box_position_operator(highest_level, hbar, mass, length, time, 
-        explicit=explicit)
-    x0 = box_position_operator(highest_level, hbar, mass, length, 0, 
-        explicit=explicit)
+    x = box_position_operator(highest_level, hbar, mass, length, time,
+                              explicit=explicit)
+    x0 = box_position_operator(highest_level, hbar, mass, length, 0,
+                               explicit=explicit)
     p = momentum_operator(x0, H)
     commutator = x * p - p * x
     otoc_operator = commutator * commutator.H
@@ -563,7 +582,8 @@ def box_OTOC_temp(highest_level, hbar, mass, length, boltzmann, temp, time,
     expectation = np.trace(values)
     return expectation
 
-def box_OTOC_temp_over_time(highest_level, hbar, mass, length, boltzmann, 
+
+def box_OTOC_temp_over_time(highest_level, hbar, mass, length, boltzmann,
                             temp, min_time, max_time, explicit=False):
     """
     OTOC for particle in a box over all specified temperatures.
@@ -597,10 +617,10 @@ def box_OTOC_temp_over_time(highest_level, hbar, mass, length, boltzmann,
         Array of expectation of OTOCs for all temperatures.
     """
     delta_t = 1 / 1000
-    t = np.linspace(min_time, max_time, np.int(np.round((max_time - 
-        min_time) / delta_t)))
+    t = np.linspace(min_time, max_time, np.int(np.round((max_time -
+                                                         min_time) / delta_t)))
     c = np.zeros(t.shape)
     for i in range(len(c)):
-        c[i] = box_OTOC_temp(highest_level, hbar, mass, length, boltzmann, 
-            temp, delta_t * i + min_time, explicit=explicit)
+        c[i] = box_OTOC_temp(highest_level, hbar, mass, length, boltzmann,
+                             temp, delta_t * i + min_time, explicit=explicit)
     return t, c

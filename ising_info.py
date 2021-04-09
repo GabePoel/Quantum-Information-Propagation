@@ -2,6 +2,7 @@ import numpy as np
 from scipy import linalg as la
 from multiprocessing import Pool
 
+
 def chain_hamiltonian(N, J, hz, hx):
     """
     Generate the hamiltonian for an Ising chain.
@@ -22,10 +23,10 @@ def chain_hamiltonian(N, J, hz, hx):
     H : 2D array
         Hamiltonian matrix.
     """
-    sx = np.array([[0, 1],[ 1, 0]])
-    sy = np.array([[0, -1j],[1j, 0]]) # Unused.
-    sz = np.array([[1, 0],[0, -1]])
-    I = np.array([[1, 0],[0, 1]])
+    sx = np.array([[0, 1], [1, 0]])
+    sy = np.array([[0, -1j], [1j, 0]])  # Unused.
+    sz = np.array([[1, 0], [0, -1]])
+    I = np.array([[1, 0], [0, 1]])
     H1 = np.zeros((2 ** N, 2 ** N))
     H2 = np.zeros((2 ** N, 2 ** N))
     H3 = np.zeros((2 ** N, 2 ** N))
@@ -53,6 +54,7 @@ def chain_hamiltonian(N, J, hz, hx):
     H = H1 + H2 + H3
     return H
 
+
 def all_up(N):
     """
     Generate state for Ising chain with all spins up.
@@ -61,7 +63,7 @@ def all_up(N):
     ----------
     N : int
         Number of qubits in chain.
-    
+
     Returns
     -------
     psi : 2D array
@@ -72,6 +74,7 @@ def all_up(N):
         psi = np.kron(psi, np.array([[0], [1]]))
     return psi
 
+
 def first_down(N):
     """
     Generate state for Ising chain with all spins up except the first.
@@ -80,7 +83,7 @@ def first_down(N):
     ----------
     N : int
         Number of qubits in chain.
-    
+
     Returns
     -------
     psi : 2D array
@@ -91,6 +94,7 @@ def first_down(N):
         psi = np.kron(psi, np.array([[0], [1]]))
     return psi
 
+
 def first_up(N):
     """
     Generate state for Ising chain with all spins down except the first.
@@ -99,7 +103,7 @@ def first_up(N):
     ----------
     N : int
         Number of qubits in chain.
-    
+
     Returns
     -------
     psi : 2D array
@@ -110,10 +114,11 @@ def first_up(N):
         psi = np.kron(psi, np.array([[1], [0]]))
     return psi
 
+
 def ss_rho(psi):
     """
     Turn a single state vector into a density matrix.
-    
+
     ρ = |ψ><ψ|
 
     Parameters
@@ -125,9 +130,10 @@ def ss_rho(psi):
     -------
     rho : 2D array
         Density matrix.
-    
+
     """
     return np.outer(psi, psi)
+
 
 def partial_trace(rho, keep, dims, optimize=False):
     """
@@ -141,10 +147,10 @@ def partial_trace(rho, keep, dims, optimize=False):
         Matrix to trace.
     keep : array
         An array of indices of the spaces to keep after being traced. For
-        instance, if the space is A x B x C x D and we want to trace out B 
+        instance, if the space is A x B x C x D and we want to trace out B
         and D, keep = [0,2].
     dims : array
-        An array of the dimensions of each space. For instance, if the 
+        An array of the dimensions of each space. For instance, if the
         space is A x B x C x D, dims = [dim_A, dim_B, dim_C, dim_D].
 
     Returns
@@ -158,10 +164,11 @@ def partial_trace(rho, keep, dims, optimize=False):
     Nkeep = np.prod(dims[keep])
 
     idx1 = [i for i in range(Ndim)]
-    idx2 = [Ndim+i if i in keep else i for i in range(Ndim)]
-    rho_a = rho.reshape(np.tile(dims,2))
-    rho_a = np.einsum(rho_a, idx1+idx2, optimize=optimize)
+    idx2 = [Ndim + i if i in keep else i for i in range(Ndim)]
+    rho_a = rho.reshape(np.tile(dims, 2))
+    rho_a = np.einsum(rho_a, idx1 + idx2, optimize=optimize)
     return rho_a.reshape(Nkeep, Nkeep)
+
 
 def vn_entropy(rho):
     """
@@ -183,6 +190,7 @@ def vn_entropy(rho):
     R = np.matmul(rho, log)
     S = - np.trace(R)
     return S
+
 
 def information_subregion(rho, num_keep):
     """
@@ -220,9 +228,10 @@ def information_subregion(rho, num_keep):
     jnt_S = vn_entropy(joint)
     return np.real(ref_S + sub_S - jnt_S)
 
+
 def information_pointwise(rho, qubits_considered):
     """
-    Calculate mutual information between reference and the individual 
+    Calculate mutual information between reference and the individual
     qubits specified.
 
     Parameters
@@ -231,7 +240,7 @@ def information_pointwise(rho, qubits_considered):
         Density matrix.
     qubits_considered : list
         A list of ints specifying the idices of the qubits.
-    
+
     Returns
     -------
     info_results : list
@@ -259,13 +268,14 @@ def information_pointwise(rho, qubits_considered):
         info_results.append(np.real(ref_S + sub_S - jnt_S))
     return info_results
 
+
 def evolve(hamiltonian, time):
     """
     Generate the time evolution operator given the hamiltonian H. This uses
     units where either ħ=1 or H includes a factor 1/ħ already.
-    
+
     U = e^(-iHt/ħ)
-    
+
     Parameters
     ----------
     hamiltonian : 2D array
@@ -280,6 +290,7 @@ def evolve(hamiltonian, time):
     """
     U = la.expm(- 1j * time * hamiltonian)
     return la.expm(- 1j * time * hamiltonian)
+
 
 def info_helper(inputs):
     """
@@ -311,6 +322,7 @@ def info_helper(inputs):
     rho_t = np.array(np.matmul(U, np.matmul(rho, U.H)))
     info = information_subregion(rho_t, num_keep)
     return info
+
 
 def pointwise_helper(inputs):
     """
@@ -344,6 +356,7 @@ def pointwise_helper(inputs):
     info = information_pointwise(rho_t, qubits_considered)
     return info
 
+
 def mutual_information_over_time(total_number_qubits,
                                  subregion_number_qubits, time_array,
                                  number_cores=5):
@@ -372,7 +385,7 @@ def mutual_information_over_time(total_number_qubits,
     H = np.kron(chain_hamiltonian(N, 1, 0, 1), np.array([[1, 0], [0, 1]]))
     psi1 = all_up(N)
     psi2 = first_down(N)
-    psi3 = first_up(N) # Unused.
+    psi3 = first_up(N)  # Unused.
     ref_down = np.array([[1], [0]])
     ref_up = np.array([[0], [1]])
     big_bell = (np.kron(psi1, ref_down) + np.kron(psi2, ref_up))
@@ -386,7 +399,8 @@ def mutual_information_over_time(total_number_qubits,
     info_array = np.array(info_list)
     return info_array
 
-def pointwise_mutual_information_over_time(total_number_qubits, 
+
+def pointwise_mutual_information_over_time(total_number_qubits,
                                            qubits_considered, time_array,
                                            number_cores=5):
     """
@@ -415,7 +429,7 @@ def pointwise_mutual_information_over_time(total_number_qubits,
     H = np.kron(chain_hamiltonian(N, 1, 0, 1), np.array([[1, 0], [0, 1]]))
     psi1 = all_up(N)
     psi2 = first_down(N)
-    psi3 = first_up(N) # Unused.
+    psi3 = first_up(N)  # Unused.
     ref_down = np.array([[1], [0]])
     ref_up = np.array([[0], [1]])
     big_bell = (np.kron(psi1, ref_down) + np.kron(psi2, ref_up))
