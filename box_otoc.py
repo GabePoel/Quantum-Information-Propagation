@@ -150,7 +150,7 @@ def box_position_operator(highest_level, hbar, mass, length, time,
                 else:
                     # Amplitude calculation from appendix.
                     amplitude = (length / np.pi ** 2) * (1 - (-1) ** (n + m)
-                                                         ) * (1 / ((n + m) ** 2) - 1 / ((n - m) ** 2))
+                        ) * (1 / ((n + m) ** 2) - 1 / ((n - m) ** 2))
             matrix[n - 1, m - 1] = phase * amplitude
     return np.matrix(matrix)
 
